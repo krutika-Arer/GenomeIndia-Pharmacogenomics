@@ -1,0 +1,72 @@
+============================================================
+Genome India × ClinPGx Pipeline Summary
+============================================================
+Total ClinPGx rsIDs             : 7561
+Matched rsIDs                   : 6108
+Unmatched ClinPGx rsIDs         : 1453
+Total VEP transcript annotation rows     : 1664126142
+Match percentage                : 80.78%
+
+Genome India unique variants       : 129,932,781
+ClinPGx matched variants           : 6,108
+Non-ClinPGx variants               : 129,926,673
+VEP annotation rows (matched set)  : 152,333
+Average annotations per variant    : 24.94
+
+Per-chromosome stats:
+  Chrom       VEP lines   Matched rows   Novel vep lines    Errors
+  1         141,244,357         14,240      141,230,117        0
+  10         83,290,466         11,276       83,279,190        0
+  11         83,809,731          8,158       83,801,573        0
+  12         77,813,932          7,593       77,806,339        0
+  13         39,488,066          2,041       39,486,025        0
+  14         54,987,295          3,558       54,983,737        0
+  15         56,261,213          3,452       56,257,761        0
+  16         59,966,850          7,031       59,959,819        0
+  17         63,468,426          6,822       63,461,604        0
+  18         43,010,278          1,783       43,008,495        0
+  19         53,118,596          8,633       53,109,963        0
+  2         145,902,735         11,324      145,891,411        0
+  20         38,063,422          2,500       38,060,922        0
+  21         22,373,916          2,450       22,371,466        0
+  22         32,613,613          7,577       32,606,036        0
+  3         139,956,247          8,548      139,947,699        0
+  4          94,729,457          6,643       94,722,814        0
+  5          85,882,445          5,608       85,876,837        0
+  6          95,421,073         13,522       95,407,551        0
+  7          95,055,044         10,759       95,044,285        0
+  8          87,615,164          4,242       87,610,922        0
+  9          70,206,149          4,573       70,201,576        0
+  
+  Chromosome Variant Count
+ chromosomes 		novel variants found
+chr10_novel.vcf.gz	6370985
+chr11_novel.vcf.gz	6453233
+chr12_novel.vcf.gz 	6248046
+chr13_novel.vcf.gz 	4571870
+chr14_novel.vcf.gz 	4192575
+chr15_novel.vcf.gz 	3809315
+chr16_novel.vcf.gz 	4223759
+chr17_novel.vcf.gz 	3729075
+chr18_novel.vcf.gz 	3620074
+chr19_novel.vcf.gz 	2910433
+chr1_novel.vcf.gz 	10350921
+chr20_novel.vcf.gz 	3002552
+chr21_novel.vcf.gz 	1658646
+chr22_novel.vcf.gz 	1753059
+chr2_novel.vcf.gz 	11374716
+chr3_novel.vcf.gz 	9503121
+chr4_novel.vcf.gz 	9090629
+chr5_novel.vcf.gz 	8521686
+chr6_novel.vcf.gz 	8061666
+chr7_novel.vcf.gz 	7504941
+chr8_novel.vcf.gz	7335978
+chr9_novel.vcf.gz 	5645501
+
+Total 129,932,781
+
+1. ClinPGx matching was performed using rsID-based matching between PharmGKB ClinPGx variants and Genome India variants.
+2. GenomeIndia_ClinPGx_Matched.tsv contains transcript-level VEP annotations rather than unique variants.
+3. A total of 152,333 VEP annotation rows correspond to 6,108 unique ClinPGx-matched variants.
+4. NovelVCF files contain 129,932,781 unique Genome India variants that were not matched to ClinPGx records.
+5. The previously reported value of 1,664,126,142 represents total VEP transcript annotation rows and should not be interpreted as unique genomic variants.

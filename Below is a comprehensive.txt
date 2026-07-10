@@ -1,0 +1,1167 @@
+Below is a comprehensive workflow documenting everything you have done so far. This is suitable for your **M.Sc. thesis, manuscript methods, GitHub repository documentation, and presentation**. After that, I've included a **master prompt** that can recreate or update your PowerPoint presentation from scratch.
+
+---
+
+# Complete Workflow
+
+## Pharmacogenomic Variant Prioritization for the Indian Population using Genome India Project, Ensembl VEP and ClinPGx
+
+---
+
+# 1. Objective
+
+The aim of this study was to identify clinically relevant pharmacogenomic variants present in the Indian population by integrating the **Genome India Project (GIP)** allele frequency dataset with **ClinPGx** pharmacogenomic annotations and **clinical evidence**, ultimately generating an **Indian Pharmacogenomic Clinical Prioritization Matrix** for translational implementation.
+
+---
+
+# 2. Data Collection
+
+Three major datasets were used.
+
+## A. Genome India Project
+
+Genome-wide allele frequency VCFs
+
+```
+chr1.vcf.gz
+...
+chr22.vcf.gz
+```
+
+Contains
+
+* Chromosome
+* Position
+* REF
+* ALT
+* Allele Frequency (AF)
+
+representing allele frequencies from Indian individuals.
+
+---
+
+## B. ClinPGx Database
+
+Downloaded
+
+```
+variants.tsv
+```
+
+Contains
+
+* Variant ID
+* Variant Name (rsID)
+* Gene ID
+* Gene Symbol
+* Clinical annotation counts
+* Guideline counts
+* Label counts
+
+Total variants
+
+```
+7562 PGx variants
+7561 unique rsIDs
+```
+
+---
+
+## C. Clinical Variants Dataset
+
+Downloaded
+
+```
+clinicalVariants.tsv
+```
+
+Contains
+
+* rsID / Star allele
+* Gene
+* Clinical phenotype
+* Drug
+* Level of Evidence
+* Clinical Type
+
+---
+
+# 3. Preparing Genome India VCF
+
+Genome India VCFs contained chromosome names
+
+```
+chr1
+chr2
+...
+```
+
+Ensembl VEP required
+
+```
+1
+2
+...
+```
+
+Therefore chromosome names were renamed using a custom Python script.
+
+Output
+
+```
+vcf_nochr/
+```
+
+---
+
+# 4. Variant Annotation using Ensembl VEP
+
+All Genome India chromosomes were annotated using
+
+* Ensembl VEP v116
+* GRCh38.p14
+* Offline cache
+* gnomAD
+* ClinVar
+* HGNC
+* Canonical transcript
+
+using 12 CPU threads.
+
+Output
+
+```
+chr1.vep.tsv
+...
+chr22.vep.tsv
+```
+
+---
+
+# 5. Selection of Relevant VEP Columns
+
+Only clinically meaningful columns were retained.
+
+Selected columns
+
+```
+Uploaded_variation
+Location
+Allele
+Gene
+Feature
+Feature_type
+Consequence
+cDNA_position
+CDS_position
+Protein_position
+Existing_variation
+IMPACT
+DISTANCE
+STRAND
+VARIANT_CLASS
+SYMBOL
+SYMBOL_SOURCE
+HGNC_ID
+BIOTYPE
+CANONICAL
+AF
+gnomADe_AF
+gnomADe_SAS_AF
+CLIN_SIG
+PHENO
+```
+
+These describe
+
+* functional effect
+* transcript
+* gene
+* ClinVar significance
+* population frequencies
+* canonical transcript
+
+---
+
+# 6. Extract ClinPGx rsIDs
+
+From
+
+```
+variants.tsv
+```
+
+the column
+
+```
+Variant Name
+```
+
+was extracted.
+
+Duplicate rsIDs were removed.
+
+Final list
+
+```
+7561 unique rsIDs
+```
+
+---
+
+# 7. rsID Matching
+
+Genome India VEP
+
+```
+Existing_variation
+```
+
+was matched against
+
+ClinPGx
+
+```
+Variant Name
+```
+
+using exact rsID matching.
+
+Example
+
+```
+ClinPGx
+
+rs4244285
+
+↓
+
+Genome India
+
+Existing_variation
+
+rs4244285
+```
+
+---
+
+# 8. Transcript-aware Matching
+
+One variant often belongs to many transcripts.
+
+Instead of collapsing duplicates,
+
+all transcript annotations were retained.
+
+This preserves
+
+* transcript-specific consequence
+* canonical transcript
+* alternative transcripts
+
+---
+
+# 9. Creation of GenomeIndia_ClinPGx_Matched.tsv
+
+For every matched rsID,
+
+ClinPGx metadata were appended.
+
+Added columns
+
+```
+ClinPGx Variant ID
+
+ClinPGx Variant Name
+
+ClinPGx Gene IDs
+
+ClinPGx Gene Symbols
+
+ClinPGx Location
+
+Variant Annotation Count
+
+Clinical Annotation Count
+
+Level1/2 Count
+
+Guideline Count
+
+Label Count
+```
+
+Output
+
+```
+GenomeIndia_ClinPGx_Matched.tsv
+```
+
+---
+
+# 10. ClinPGx Variants Not Present in Genome India
+
+Variants without Genome India rsID matches were exported.
+
+Output
+
+```
+ClinPGx_NotFound.tsv
+```
+
+---
+
+# 11. Novel Variant Discovery
+
+Genome India VCFs were compared against ClinPGx rsIDs.
+
+Variants absent from ClinPGx were considered novel.
+
+Generated chromosome-wise compressed VCFs
+
+```
+NovelVCF/
+
+chr1_novel.vcf.gz
+
+...
+
+chr22_novel.vcf.gz
+```
+
+---
+
+# 12. Novel Variant Annotation
+
+Novel VCFs were matched back to
+
+```
+chr*.vep.tsv
+```
+
+using genomic coordinates.
+
+Additional annotations added
+
+* Gene
+* Symbol
+* Transcript
+* Consequence
+* HGNC
+* Canonical transcript
+* Existing Variation
+
+Output
+
+```
+NovelAnnotated/
+
+chr1_novel_annotated.tsv.gz
+
+...
+
+chr22_novel_annotated.tsv.gz
+```
+
+---
+
+# 13. Clinical Variant Integration
+
+Clinical data
+
+```
+clinicalVariants.tsv
+```
+
+was integrated.
+
+Matching strategy
+
+### First
+
+rsID
+
+↓
+
+Existing_variation
+
+---
+
+### Second
+
+Gene Symbol
+
+↓
+
+ClinPGx Gene Symbol
+
+---
+
+Multiple matches were retained.
+
+Outputs
+
+```
+GenomeIndia_ClinPGx_Clinical_RSMatch.tsv
+
+GenomeIndia_ClinPGx_Clinical_GeneMatch.tsv
+
+Master_PGx_Final.tsv
+```
+
+---
+
+# 14. Indian Allele Frequency
+
+Genome India AF
+
+was extracted directly from original VCFs
+
+using
+
+```
+CHROM
+
+POS
+
+REF
+
+ALT
+```
+
+matching.
+
+Added
+
+```
+GI_AF
+```
+
+to
+
+```
+Master_PGx_Final.tsv
+```
+
+---
+
+# 15. Clinical Phenotype Filtering
+
+A curated phenotype list
+
+```
+selected_phenotypes.txt
+```
+
+was created.
+
+Included
+
+* Cancer
+* Cardiovascular
+* Diabetes
+* Tuberculosis
+* HIV
+* Drug Toxicity
+* NSCLC
+* Hypertension
+* Leukemia
+
+etc.
+
+Rows with matching phenotypes
+
+or blank phenotype
+
+were retained.
+
+Output
+
+```
+Master_PGx_SelectedPhenotypes.tsv
+```
+
+---
+
+# 16. Final Master Dataset
+
+Final file
+
+```
+Master_PGx_Final.tsv
+```
+
+contains
+
+Genome India
+
+*
+
+VEP
+
+*
+
+ClinPGx
+
+*
+
+Clinical Variants
+
+*
+
+Indian AF
+
+*
+
+Drug information
+
+*
+
+Clinical evidence
+
+*
+
+Phenotypes
+
+This serves as the integrated pharmacogenomic resource for downstream prioritization.
+
+---
+
+# 17. Proposed Clinical Prioritization Framework
+
+Variants are prioritized using
+
+### Clinical evidence
+
+```
+1A
+
+1B
+
+2A
+
+2B
+
+3
+
+4
+```
+
+---
+
+### Genome India AF
+
+Common Indian variants
+
+↓
+
+Higher implementation priority
+
+---
+
+### ClinVar
+
+```
+Pathogenic
+
+Likely pathogenic
+
+Drug response
+
+Risk factor
+```
+
+---
+
+### Consequence
+
+```
+stop gained
+
+frameshift
+
+missense
+
+splice
+
+synonymous
+```
+
+---
+
+### Drug Availability
+
+CPIC
+
+DPWG
+
+FDA
+
+PharmGKB
+
+---
+
+### Disease Relevance
+
+Cancer
+
+Cardiology
+
+Diabetes
+
+Tuberculosis
+
+HIV
+
+Psychiatry
+
+Pain
+
+etc.
+
+---
+
+# 18. Final Deliverables
+
+```
+GenomeIndia_ClinPGx_Matched.tsv
+
+ClinPGx_NotFound.tsv
+
+NovelAnnotated/
+
+Master_PGx_Final.tsv
+
+Master_PGx_SelectedPhenotypes.tsv
+
+Summary.txt
+
+Python pipeline
+
+Reproducible workflow
+```
+
+---
+
+# Final Objective
+
+Rather than producing a simple merged annotation table, the project culminates in the development of an **Indian Pharmacogenomic Clinical Prioritization Matrix**. This framework combines allele frequencies from the Genome India Project, functional annotations from Ensembl VEP, pharmacogenomic evidence from ClinPGx, and clinical evidence from curated pharmacogenomic variant datasets. The resulting ranked variant catalogue can support hospitals, diagnostic laboratories, and researchers in selecting pharmacogenomic tests that are both clinically actionable and relevant to the Indian population. The framework is reproducible and can be updated as new Genome India releases, ClinPGx annotations, or clinical guidelines become available.
+
+---
+
+# Master Prompt to Generate/Update Your PPT
+
+Use the following prompt when you want ChatGPT to generate or update your presentation:
+
+> **Create a professional MSc Bioinformatics thesis presentation (approximately 25–35 slides) titled "Development of an Indian Pharmacogenomic Clinical Prioritization Matrix through Integration of Genome India Project, Ensembl VEP, ClinPGx and Clinical Pharmacogenomic Evidence".**
+>
+> Use the complete workflow described above. Structure the presentation with:
+>
+> 1. Background and rationale
+> 2. Pharmacogenomics overview
+> 3. Genome India Project overview
+> 4. ClinPGx database
+> 5. Clinical variants database
+> 6. Study objectives
+> 7. Data sources
+> 8. Overall workflow diagram
+> 9. Genome India VCF preprocessing
+> 10. Chromosome renaming
+> 11. Ensembl VEP annotation (include VEP v116, GRCh38, offline cache, 12-thread workflow, selected annotation fields, and reference to the Ensembl VEP documentation)
+> 12. rsID extraction from ClinPGx
+> 13. rsID matching between ClinPGx and Genome India
+> 14. Transcript-aware annotation strategy
+> 15. Creation of `GenomeIndia_ClinPGx_Matched.tsv`
+> 16. Identification of ClinPGx variants absent from Genome India
+> 17. Discovery and annotation of novel Genome India variants
+> 18. Integration of clinicalVariants.tsv
+> 19. Construction of `Master_PGx_Final.tsv`
+> 20. Addition of Indian allele frequency (GI_AF)
+> 21. Clinical phenotype filtering
+> 22. Development of the Indian Pharmacogenomic Clinical Prioritization Matrix
+> 23. Proposed implementation in Indian hospitals
+> 24. Key results (include tables, workflow diagrams, Sankey-style summaries if appropriate, counts of matched, unmatched, and novel variants)
+> 25. Future work
+> 26. Conclusions.
+>
+> Use a blue-and-white scientific theme with publication-quality diagrams, flowcharts, tables, and icons. Include references to the Genome India Project, Ensembl VEP documentation, ClinPGx, ClinVar, gnomAD, PharmGKB, and CPIC where appropriate. Design the slides to be suitable for an MSc thesis defense and maintain consistent formatting, concise bullet points, and visually appealing layouts.
+(vep_grch38) krutikaarer@ssnccpr:/mnt/Linux_storage/pharmacogenomics_9768GI_SummaryStats$ tree -lh
+[4.0K]  .
+├── [354K]  clinicalVariants.tsv
+├── [657K]  GIP Reference Genome — PDF.pdf
+├── [4.0K]  output
+│   ├── [ 85K]  ClinPGx_NotFound.tsv
+│   ├── [ 41M]  Copy of Master_PGx_Final - Master_PGx_Final.tsv
+│   ├── [ 36M]  GenomeIndia_ClinPGx_Matched.tsv
+│   ├── [ 42M]  Master_PGx_Final.tsv
+│   ├── [ 11M]  Master_PGx_SelectedPhenotypes.tsv
+│   ├── [3.7K]  merge_gi_clinical.log
+│   ├── [4.0K]  NovelAnnotated
+│   │   ├── [ 77M]  chr10_novel_annotated.tsv.gz
+│   │   ├── [ 84M]  chr11_novel_annotated.tsv.gz
+│   │   ├── [ 80M]  chr12_novel_annotated.tsv.gz
+│   │   ├── [ 50M]  chr13_novel_annotated.tsv.gz
+│   │   ├── [ 56M]  chr14_novel_annotated.tsv.gz
+│   │   ├── [ 55M]  chr15_novel_annotated.tsv.gz
+│   │   ├── [ 60M]  chr16_novel_annotated.tsv.gz
+│   │   ├── [ 60M]  chr17_novel_annotated.tsv.gz
+│   │   ├── [ 42M]  chr18_novel_annotated.tsv.gz
+│   │   ├── [ 52M]  chr19_novel_annotated.tsv.gz
+│   │   ├── [137M]  chr1_novel_annotated.tsv.gz
+│   │   ├── [ 39M]  chr20_novel_annotated.tsv.gz
+│   │   ├── [ 20M]  chr21_novel_annotated.tsv.gz
+│   │   ├── [ 28M]  chr22_novel_annotated.tsv.gz
+│   │   ├── [140M]  chr2_novel_annotated.tsv.gz
+│   │   ├── [111M]  chr3_novel_annotated.tsv.gz
+│   │   ├── [ 98M]  chr4_novel_annotated.tsv.gz
+│   │   ├── [ 99M]  chr5_novel_annotated.tsv.gz
+│   │   ├── [ 97M]  chr6_novel_annotated.tsv.gz
+│   │   ├── [ 91M]  chr7_novel_annotated.tsv.gz
+│   │   ├── [ 86M]  chr8_novel_annotated.tsv.gz
+│   │   └── [ 70M]  chr9_novel_annotated.tsv.gz
+│   ├── [ 14K]  pipeline.log
+│   ├── [ 33K]  selected_phenotypes.txt
+│   └── [3.3K]  Summary.txt
+├── [131K]  Pasted image (2).png
+├── [190K]  Pasted image.png
+├── [4.0K]  scripts
+│   ├── [4.7K]  add_gene_info_to_novel.py
+│   ├── [3.2K]  add_genomeindia_af.py
+│   ├── [2.1K]  Clinical_phenotypes_filter.py
+│   ├── [4.0K]  filter_clinical_phenotypes.py
+│   ├── [5.3K]  genomeindia_clinpgx_pipeline.py
+│   ├── [5.6K]  genomeindia_clinpgx_stream.py
+│   ├── [ 22K]  genomeindia_pipeline.py
+│   ├── [ 12K]  merge_gi_clinical.py
+│   ├── [4.0K]  not use
+│   │   ├── [1015]  merge_clinical_gene_fast.py
+│   │   ├── [1.1K]  merge_clinical_rsid.py
+│   │   └── [5.6K]  merge_rsid_gene_master.py
+│   └── [1015]  run_vep_pgx.sh
+├── [3.4M]  variants.tsv
+├── [4.0K]  vcf
+│   ├── [ 33M]  chr10.vcf.gz
+│   ├── [ 89K]  chr10.vcf.gz.tbi
+│   ├── [ 34M]  chr11.vcf.gz
+│   ├── [ 90K]  chr11.vcf.gz.tbi
+│   ├── [ 33M]  chr12.vcf.gz
+│   ├── [ 89K]  chr12.vcf.gz.tbi
+│   ├── [ 24M]  chr13.vcf.gz
+│   ├── [ 66K]  chr13.vcf.gz.tbi
+│   ├── [ 22M]  chr14.vcf.gz
+│   ├── [ 61K]  chr14.vcf.gz.tbi
+│   ├── [ 20M]  chr15.vcf.gz
+│   ├── [ 56K]  chr15.vcf.gz.tbi
+│   ├── [ 22M]  chr16.vcf.gz
+│   ├── [ 56K]  chr16.vcf.gz.tbi
+│   ├── [ 19M]  chr17.vcf.gz
+│   ├── [ 54K]  chr17.vcf.gz.tbi
+│   ├── [ 19M]  chr18.vcf.gz
+│   ├── [ 54K]  chr18.vcf.gz.tbi
+│   ├── [ 15M]  chr19.vcf.gz
+│   ├── [ 38K]  chr19.vcf.gz.tbi
+│   ├── [417M]  chr1.vcf
+│   ├── [ 54M]  chr1.vcf.gz
+│   ├── [152K]  chr1.vcf.gz.tbi
+│   ├── [ 16M]  chr20.vcf.gz
+│   ├── [ 42K]  chr20.vcf.gz.tbi
+│   ├── [8.8M]  chr21.vcf.gz
+│   ├── [ 25K]  chr21.vcf.gz.tbi
+│   ├── [9.2M]  chr22.vcf.gz
+│   ├── [ 25K]  chr22.vcf.gz.tbi
+│   ├── [ 60M]  chr2.vcf.gz
+│   ├── [161K]  chr2.vcf.gz.tbi
+│   ├── [ 50M]  chr3.vcf.gz
+│   ├── [133K]  chr3.vcf.gz.tbi
+│   ├── [ 48M]  chr4.vcf.gz
+│   ├── [127K]  chr4.vcf.gz.tbi
+│   ├── [ 45M]  chr5.vcf.gz
+│   ├── [119K]  chr5.vcf.gz.tbi
+│   ├── [ 43M]  chr6.vcf.gz
+│   ├── [114K]  chr6.vcf.gz.tbi
+│   ├── [ 40M]  chr7.vcf.gz
+│   ├── [105K]  chr7.vcf.gz.tbi
+│   ├── [ 38M]  chr8.vcf.gz
+│   ├── [ 97K]  chr8.vcf.gz.tbi
+│   ├── [ 30M]  chr9.vcf.gz
+│   └── [ 80K]  chr9.vcf.gz.tbi
+├── [4.0K]  vcf_nochr
+│   ├── [ 34M]  chr10.vcf.gz
+│   ├── [ 88K]  chr10.vcf.gz.tbi
+│   ├── [ 34M]  chr11.vcf.gz
+│   ├── [ 89K]  chr11.vcf.gz.tbi
+│   ├── [ 33M]  chr12.vcf.gz
+│   ├── [ 88K]  chr12.vcf.gz.tbi
+│   ├── [ 24M]  chr13.vcf.gz
+│   ├── [ 65K]  chr13.vcf.gz.tbi
+│   ├── [ 22M]  chr14.vcf.gz
+│   ├── [ 60K]  chr14.vcf.gz.tbi
+│   ├── [ 20M]  chr15.vcf.gz
+│   ├── [ 55K]  chr15.vcf.gz.tbi
+│   ├── [ 22M]  chr16.vcf.gz
+│   ├── [ 55K]  chr16.vcf.gz.tbi
+│   ├── [ 19M]  chr17.vcf.gz
+│   ├── [ 53K]  chr17.vcf.gz.tbi
+│   ├── [ 19M]  chr18.vcf.gz
+│   ├── [ 53K]  chr18.vcf.gz.tbi
+│   ├── [ 15M]  chr19.vcf.gz
+│   ├── [ 37K]  chr19.vcf.gz.tbi
+│   ├── [387M]  chr1.vcf
+│   ├── [ 54M]  chr1.vcf.gz
+│   ├── [150K]  chr1.vcf.gz.tbi
+│   ├── [ 16M]  chr20.vcf.gz
+│   ├── [ 41K]  chr20.vcf.gz.tbi
+│   ├── [8.8M]  chr21.vcf.gz
+│   ├── [ 24K]  chr21.vcf.gz.tbi
+│   ├── [9.2M]  chr22.vcf.gz
+│   ├── [ 24K]  chr22.vcf.gz.tbi
+│   ├── [ 60M]  chr2.vcf.gz
+│   ├── [159K]  chr2.vcf.gz.tbi
+│   ├── [ 50M]  chr3.vcf.gz
+│   ├── [132K]  chr3.vcf.gz.tbi
+│   ├── [ 48M]  chr4.vcf.gz
+│   ├── [125K]  chr4.vcf.gz.tbi
+│   ├── [ 45M]  chr5.vcf.gz
+│   ├── [118K]  chr5.vcf.gz.tbi
+│   ├── [ 43M]  chr6.vcf.gz
+│   ├── [112K]  chr6.vcf.gz.tbi
+│   ├── [ 40M]  chr7.vcf.gz
+│   ├── [105K]  chr7.vcf.gz.tbi
+│   ├── [ 38M]  chr8.vcf.gz
+│   ├── [ 96K]  chr8.vcf.gz.tbi
+│   ├── [ 30M]  chr9.vcf.gz
+│   ├── [ 79K]  chr9.vcf.gz.tbi
+│   ├── [ 211]  chr_rename.txt
+│   ├── [3.4K]  test_body.txt
+│   ├── [3.5K]  test.vcf
+│   ├── [1.2M]  test_vep.txt
+│   └── [ 16K]  test_vep.txt_summary.html
+├── [684M]  vcf.zip
+└── [4.0K]  vep_pgx
+    ├── [ 21G]  chr10.vep.tsv
+    ├── [ 21K]  chr10.vep.tsv_summary.html
+    ├── [ 21G]  chr11.vep.tsv
+    ├── [ 21K]  chr11.vep.tsv_summary.html
+    ├── [ 19G]  chr12.vep.tsv
+    ├── [ 21K]  chr12.vep.tsv_summary.html
+    ├── [9.6G]  chr13.vep.tsv
+    ├── [ 20K]  chr13.vep.tsv_summary.html
+    ├── [ 14G]  chr14.vep.tsv
+    ├── [ 20K]  chr14.vep.tsv_summary.html
+    ├── [ 14G]  chr15.vep.tsv
+    ├── [ 20K]  chr15.vep.tsv_summary.html
+    ├── [ 15G]  chr16.vep.tsv
+    ├── [ 20K]  chr16.vep.tsv_summary.html
+    ├── [ 16G]  chr17.vep.tsv
+    ├── [ 20K]  chr17.vep.tsv_summary.html
+    ├── [ 11G]  chr18.vep.tsv
+    ├── [ 20K]  chr18.vep.tsv_summary.html
+    ├── [ 13G]  chr19.vep.tsv
+    ├── [ 20K]  chr19.vep.tsv_summary.html
+    ├── [ 35G]  chr1.vep.tsv
+    ├── [ 22K]  chr1.vep.tsv_summary.html
+    ├── [9.3G]  chr20.vep.tsv
+    ├── [ 20K]  chr20.vep.tsv_summary.html
+    ├── [5.5G]  chr21.vep.tsv
+    ├── [ 19K]  chr21.vep.tsv_summary.html
+    ├── [8.1G]  chr22.vep.tsv
+    ├── [ 19K]  chr22.vep.tsv_summary.html
+    ├── [ 36G]  chr2.vep.tsv
+    ├── [ 22K]  chr2.vep.tsv_summary.html
+    ├── [ 34G]  chr3.vep.tsv
+    ├── [ 22K]  chr3.vep.tsv_summary.html
+    ├── [ 23G]  chr4.vep.tsv
+    ├── [ 21K]  chr4.vep.tsv_summary.html
+    ├── [ 21G]  chr5.vep.tsv
+    ├── [ 21K]  chr5.vep.tsv_summary.html
+    ├── [ 23G]  chr6.vep.tsv
+    ├── [ 21K]  chr6.vep.tsv_summary.html
+    ├── [ 23G]  chr7.vep.tsv
+    ├── [ 21K]  chr7.vep.tsv_summary.html
+    ├── [ 21G]  chr8.vep.tsv
+    ├── [ 21K]  chr8.vep.tsv_summary.html
+    ├── [ 17G]  chr9.vep.tsv
+    └── [ 21K]  chr9.vep.tsv_summary.html
+
+8 directories, 188 files
+(vep_grch38) krutikaarer@ssnccpr:/mnt/Linux_storage/pharmacogenomi
+
+Based on your complete workflow, here's a publication-style **Methodology** suitable 
+
+---
+
+# Methodology
+
+## Overview
+
+This study aimed to develop an **Indian Pharmacogenomic Clinical Prioritization Matrix** by integrating genomic variants from the **Genome India Project** with functional annotations from **Ensembl Variant Effect Predictor (VEP)**, pharmacogenomic information from **ClinPGx**, clinical pharmacogenomic evidence, and population allele frequency data. The overall workflow is illustrated in Figure X.
+
+---
+
+## 1. Genome India Project Dataset
+
+Whole-genome variant call format (VCF) files generated by the **Genome India Project (GIP)** representing **9,768 Indian genomes** were used as the primary genomic dataset. Chromosome-wise compressed VCF files (.vcf.gz) and their corresponding index (.tbi) files aligned to the **GRCh38** reference genome were downloaded and organized for downstream analysis.
+
+---
+
+## 2. Genome India VCF Preprocessing
+
+Prior to annotation, chromosome names in the Genome India VCF files were standardized to ensure compatibility with Ensembl GRCh38 reference annotations.
+
+The preprocessing workflow included:
+
+* Validation of chromosome-wise VCF files
+* Compression using BGZF
+* Index generation using Tabix
+* Chromosome renaming from **chr1–chr22** to **1–22**
+* Quality assessment using bcftools
+
+The processed chromosome-wise VCF files were subsequently used for annotation.
+
+---
+
+## 3. Ensembl VEP Annotation
+
+Functional annotation of all Genome India variants was performed using **Ensembl Variant Effect Predictor (VEP) version 116** in **offline mode**.
+
+### Reference genome
+
+GRCh38
+
+### Annotation resources
+
+* Ensembl Cache v116
+* GRCh38 Offline Cache
+* Homo sapiens primary assembly FASTA
+* gnomAD
+* ClinVar
+* dbSNP
+* COSMIC
+
+### Computational settings
+
+* Offline annotation
+* Cache mode
+* Canonical transcript annotation
+* Multi-thread processing (12 CPU threads)
+
+The following pharmacogenomically relevant annotations were extracted:
+
+* Uploaded variation
+* Genomic location
+* Existing variation (dbSNP rsID)
+* Variant consequence
+* Variant class
+* Gene symbol
+* Transcript information
+* Canonical transcript
+* Protein consequence
+* HGNC ID
+* ClinVar clinical significance
+* Phenotype
+* gnomAD allele frequencies
+* South Asian allele frequencies
+
+---
+
+## 4. ClinPGx Database Processing
+
+The **ClinPGx variants database** containing **7,561 unique pharmacogenomic variants** was downloaded and processed.
+
+The **Variant Name** column was extracted to obtain a non-redundant list of rsIDs representing clinically relevant pharmacogenomic variants.
+
+These rsIDs served as the reference list for Genome India variant matching.
+
+---
+
+## 5. rsID-based Variant Matching
+
+Annotated Genome India variants were compared against the ClinPGx rsID list using the **Existing_variation** field generated by VEP.
+
+For each chromosome:
+
+Genome India VEP variants
+
+↓
+
+Existing_variation
+
+↓
+
+ClinPGx Variant Name
+
+↓
+
+Matched variants
+
+↓
+
+Unmatched variants
+
+Three datasets were generated:
+
+* GenomeIndia_ClinPGx_Matched.tsv
+* ClinPGx_NotFound.tsv
+* Novel Genome India variants
+
+---
+
+## 6. Transcript-aware Annotation Strategy
+
+Because a single genomic variant may affect multiple transcripts, all transcript-specific annotations generated by VEP were retained.
+
+Each transcript was preserved independently, allowing downstream analyses to distinguish between different functional consequences across alternative transcripts.
+
+---
+
+## 7. Identification of Novel Genome India Variants
+
+Variants present in the Genome India Project but absent from the ClinPGx database were classified as **novel Indian pharmacogenomic variants**.
+
+These variants were extracted chromosome-wise as compressed VCF files.
+
+Subsequently, transcript annotations including:
+
+* Gene
+* Transcript
+* Consequence
+* Variant class
+* Gene symbol
+* Canonical transcript
+
+were incorporated by matching genomic coordinates with the VEP annotation files.
+
+---
+
+## 8. Integration of Clinical Pharmacogenomic Evidence
+
+The **clinicalVariants.tsv** dataset containing curated pharmacogenomic evidence was integrated with the matched Genome India–ClinPGx dataset.
+
+Two complementary integration strategies were implemented:
+
+### rsID-level integration
+
+Matching was performed using
+
+Existing_variation (Genome India)
+
+↓
+
+Clinical variant (clinicalVariants.tsv)
+
+### Gene-level integration
+
+Additional annotations were obtained using
+
+Gene Symbol
+
+↓
+
+Clinical Gene
+
+The merged dataset incorporated
+
+* Clinical evidence level
+* Drug information
+* Clinical phenotypes
+* Pharmacogenomic response type
+
+---
+
+## 9. Integration of Indian Allele Frequency
+
+Allele frequencies specific to the Indian population were extracted directly from the Genome India VCF files using genomic coordinates.
+
+The **AF** value present within the INFO field of the original VCF files was appended as **GI_AF** to the integrated pharmacogenomic dataset.
+
+This enabled direct comparison between
+
+* Indian allele frequency (GI_AF)
+* gnomAD Global frequency
+* gnomAD South Asian frequency
+
+---
+
+## 10. Clinical Phenotype Filtering
+
+Clinical phenotypes relevant to precision medicine were selected from the integrated dataset.
+
+The selected disease categories included:
+
+* Cancer
+* Drug toxicity
+* Cardiovascular diseases
+* Diabetes
+* Tuberculosis
+* HIV infection
+* Non-small cell lung cancer
+* Acute lymphoblastic leukemia
+* Breast cancer
+* Colorectal cancer
+* Pancreatic cancer
+* Liver cancer
+* Adverse drug reactions
+
+Variants associated with these phenotypes were retained for downstream prioritization.
+
+---
+
+## 11. Development of the Indian Pharmacogenomic Clinical Prioritization Matrix
+
+An evidence-based prioritization framework was developed by integrating:
+
+* Genome India allele frequency
+* Global allele frequency
+* South Asian allele frequency
+* ClinVar clinical significance
+* ClinPGx annotation counts
+* Clinical evidence level
+* Drug association
+* Disease phenotype
+* Functional consequence
+* Variant impact
+
+Variants were subsequently categorized according to their clinical utility into:
+
+* Immediate clinical implementation
+* High-priority validation
+* Population-specific pharmacogenomic candidates
+* Research-only variants
+
+---
+
+## 12. Downstream Analyses
+
+The finalized pharmacogenomic dataset was used for:
+
+* Allele frequency comparison (India vs Global)
+* Identification of Indian-enriched pharmacogenomic variants
+* Cohort dynamics analysis
+* Population divergence analysis
+* ClinVar evidence classification
+* Level 1A actionable pharmacogenomic variants
+* Variant oncology panel generation
+* Identification of clinically actionable pharmacogenes
+* Development of an Indian Pharmacogenomic Clinical Prioritization Matrix
+
+---
+
+# Software and Databases Used
+
+| Tool/Database                    | Version               |
+| -------------------------------- | --------------------- |
+| Genome India Project             | 9,768 Genomes         |
+| Ensembl Variant Effect Predictor | v116                  |
+| Reference Genome                 | GRCh38                |
+| Ensembl Cache                    | v116                  |
+| ClinPGx                          | Current Release       |
+| ClinVar                          | Included in VEP Cache |
+| gnomAD                           | Included in VEP Cache |
+| bcftools                         | Latest Bioconda       |
+| samtools                         | Latest Bioconda       |
+| tabix                            | Latest Bioconda       |
+| Python                           | 3.12                  |
+| pandas                           | Latest                |
+| Linux                            | Ubuntu 24.04 LTS      |
+
+
