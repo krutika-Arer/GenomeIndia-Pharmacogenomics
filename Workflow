@@ -5,10 +5,8 @@ project structure
 ├── [354K]  clinicalVariants.tsv
 ├── [4.0K]  output
 │   ├── [ 85K]  ClinPGx_NotFound.tsv
-│   ├── [ 41M]  Copy of Master_PGx_Final - Master_PGx_Final.tsv
 │   ├── [ 36M]  GenomeIndia_ClinPGx_Matched.tsv
 │   ├── [ 42M]  Master_PGx_Final.tsv
-│   ├── [ 11M]  Master_PGx_SelectedPhenotypes.tsv
 │   ├── [3.7K]  merge_gi_clinical.log
 │   ├── [4.0K]  NovelAnnotated
 │   │   ├── [ 77M]  chr10_novel_annotated.tsv.gz
